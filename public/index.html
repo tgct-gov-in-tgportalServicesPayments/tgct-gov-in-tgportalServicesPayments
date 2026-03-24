@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-Payment</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+        .top-language { text-align: right; padding: 5px 20px; background: #f4f6f9; }
+        
+        /* FIXED HEADER WRAPPER */
+        .wapper { background: #f4f6f9; padding-bottom: 5px; width: 100%; border-bottom: 1px solid #ddd; }
+        
+        /* This container locks the images in place during Zoom In/Out */
+        .header-container {
+            width: 100%;
+            max-width: 1000px; 
+            margin: 0 auto; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .mainmenuMain1 { background: #008B8B; margin-top: 5px; }
+        
+        /* FIXED MENU: Keeps items in one line even on 100% zoom */
+        .mainmenuMain1 nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-wrap: nowrap; 
+            justify-content: center; 
+            white-space: nowrap; 
+        }
+        
+        .mainmenuMain1 nav ul li { position: relative; }
+        .mainmenuMain1 nav ul li a { display: block; padding: 5px 15px; color: white; text-decoration: none; font-size: 13px; font-weight: normal; text-transform: uppercase; }
+        .mainmenuMain1 nav ul li:hover > a { background: #006666; }
+        .mainmenuMain1 nav ul li .badge { position: absolute; top: 2px; right: 0; font-size: 10px; }
+        
+        /* Submenu remains as it was */
+        .mainmenuMain1 nav ul ul { display: none; position: absolute; top: 100%; left: 0; background: #008B8B; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 99999; min-width: 230px; padding: 0; margin: 0; }
+        .mainmenuMain1 nav ul li:hover > ul { display: block !important; }
+        .mainmenuMain1 nav ul ul li { width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .mainmenuMain1 nav ul ul li:last-child { border-bottom: none; }
+        .mainmenuMain1 nav ul ul li a { color: #ffffff !important; padding: 10px 15px; text-transform: none; font-weight: normal; display: flex; justify-content: space-between; align-items: center; }
+        .mainmenuMain1 nav ul ul li:hover > a { background: #006666 !important; }
+
+        .content-box { border: 1px solid #2e7d32; background: #fff; padding: 30px; width: 95%; max-width: 1100px; margin: 30px auto; }
+        .pageTitle { text-align: center; margin-bottom: 25px; }
+        .pageTitle h3 { margin: 0; color: #000; font-size: 20px; font-weight: bold; }
+        .form-table { border-collapse: collapse; width: 100%; max-width: 650px; margin: 0 auto; }
+        .form-table td { padding: 8px 12px; border: 1px solid #d3d3d3; font-size: 13px; color: #000000; font-weight: bold; }
+        .form-table td:first-child { width: 40%; font-weight: bold; }
+        .form-input { padding: 2px 6px; border: 1px solid #a9a9a9; width: 200px; font-size: 13px; background-color: #fff; height: 24px; box-sizing: border-box; font-weight: bold; }
+        .date-input { width: 120px; cursor: pointer; }
+        .btn-classic { padding: 4px 12px; background: #f0f0f0; color: #8b0000; border: 1px solid #888; cursor: pointer; font-size: 13px; margin: 5px; font-weight: bold; }
+        .btn-classic:hover { background: #e0e0e0; }
+        .info-box-container { max-width: 750px; margin: 15px auto 0 auto; }
+        .info-box-top { background-color: #ffebd6; padding: 10px; text-align: center; border: 1px solid #d3d3d3; border-bottom: none; font-size: 12px; color: #000; font-weight: bold; }
+        .info-box-bottom { background-color: #e6f2ff; padding: 10px; text-align: center; border: 1px solid #d3d3d3; font-size: 12px; color: #000; line-height: 1.6; font-weight: bold; }
+
+        /* Custom Alert Pop-up */
+        .custom-alert-overlay { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); justify-content: center; align-items: flex-start; padding-top: 20px; }
+        .custom-alert-box { background-color: #fcfff8; padding: 24px 24px 20px 24px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05); width: 420px; max-width: 90%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; box-sizing: border-box; }
+        .custom-alert-box p.alert-title { margin: 0 0 16px 0; font-size: 16px; color: #000; font-weight: 600; letter-spacing: 0.2px; }
+        .custom-alert-box p.alert-message { margin: 0 0 35px 0; font-size: 15px; color: #2b2b2b; }
+        .custom-alert-btn-container { text-align: right; }
+        .custom-alert-btn { background-color: #3c5128; color: #ffffff; border: 2px solid #ffffff; box-shadow: 0 0 0 1px #3c5128; padding: 6px 30px; border-radius: 50px; cursor: pointer; font-size: 14px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    
+    <div id="customAlert" class="custom-alert-overlay">
+        <div class="custom-alert-box">
+            <p class="alert-title">www.tgct.gov.in says</p>
+            <p class="alert-message">Invalid TIN/GRN</p>
+            <div class="custom-alert-btn-container"><button class="custom-alert-btn" onclick="closeCustomAlert()">OK</button></div>
+        </div>
+    </div>
+
+    <div class="top-language">
+        <select style="font-size: 11px; padding: 2px;"><option>Select Language</option><option>English</option><option>Telugu</option></select>
+    </div>
+
+    <div class="wapper">
+        <div class="header-container">
+            <div class="d-flex align-items-center">
+                <div style="padding: 2px;"><img src="https://www.tgct.gov.in/tgportal/images/Telangana-Rising-new.png" alt="Telangana Rising" style="height: 100px; width: 80px;"></div>
+                <div style="margin-left: 10px; padding: 2px;"><a href="#"><img src="https://www.tgct.gov.in/tgportal/images/logo.png" alt="Logo" style="height: 80px; width: 80px;"></a></div>
+                <div style="margin-left: 15px;">
+                    <a href="#" style="text-decoration:none;">
+                        <h4 style="font-size: 25px; font-weight: bold; color: #1e3a8a; margin-bottom: 2px; text-transform: uppercase;">COMMERCIAL TAXES DEPARTMENT</h4>
+                        <span style="font-size: 16px; color: #555; font-weight: normal;">Government of Telangana</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <img src="https://www.tgct.gov.in/tgportal/images/CM-Sri-Anumula-Revanth-Reddy.jpg" alt="CM" style="height: 75px; object-fit: contain">
+                <h3 class="mt-1" style="font-size: 13px; color: #004087; font-weight: bold; margin: 0;">SRI ANUMULA REVANTH REDDY<br><span style="font-size: 13px; color: Black; font-weight: normal;">Hon'ble Chief Minister</span></h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="mainmenuMain1">
+        <div class="container-fluid">
+            <nav>
+                <ul>
+                    <li><a href="#">About Us <i class="fa fa-angle-down"></i></a>
+                        <ul><li><a href="#">Brief Profile <i class="fa fa-angle-right"></i></a></li><li><a href="#">Orgn. Structure <i class="fa fa-angle-right"></i></a></li><li><a href="#">Cadre Strength</a></li><li><a href="#">Territorial Jurisdiction</a></li><li><a href="#">CCT Office Location</a></li><li><a href="#">Contact Us <i class="fa fa-angle-right"></i></a></li><li><a href="#">Tax Collections</a></li></ul>
+                    </li>
+                    <li><a href="#">All Acts <i class="fa fa-angle-down"></i></a>
+                        <ul><li><a href="#">TGST <i class="fa fa-angle-right"></i></a></li><li><a href="#">VAT <i class="fa fa-angle-right"></i></a></li><li><a href="#">CST <i class="fa fa-angle-right"></i></a></li><li><a href="#">PT <i class="fa fa-angle-right"></i></a></li><li><a href="#">ET <i class="fa fa-angle-right"></i></a></li><li><a href="#">Entry Tax 1996 <i class="fa fa-angle-right"></i></a></li><li><a href="#">Luxury Tax <i class="fa fa-angle-right"></i></a></li><li><a href="#">HRBT <i class="fa fa-angle-right"></i></a></li><li><a href="#">RDC <i class="fa fa-angle-right"></i></a></li><li><a href="#">APGST (Repealed) <i class="fa fa-angle-right"></i></a></li></ul>
+                    </li>
+                    <li><a href="#">Tribunal <i class="fa fa-angle-down"></i></a><ul><li><a href="#">About Tribunal</a></li><li><a href="#">Tribunal Cause List</a></li><li><a href="#">Tribunal Orders</a></li></ul></li>
+                    <li><a href="#">RTI</a></li><li><a href="#">Citizens Charter</a></li><li><a href="#">GST Info</a></li><li><a href="#">Staff College</a></li>
+                    <li><a href="#">Contact Us <i class="fa fa-angle-down"></i></a><ul><li><a href="#">GST Suvidha Kendras</a></li><li><a href="#">Complaints/Suggestions</a></li><li><a href="#">Professional Tax Officers</a></li><li><a href="#">Registering Authorities</a></li></ul></li>
+                    <li><a href="#">Know Your Jurisdiction <span class="badge bg-warning text-dark">New</span></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div class="content_inner">
+        <div class="content-box">
+            <div class="pageTitle"><h3>Telangana Commercial Taxes e-Payment</h3></div>
+            <form id="paymentForm">
+                <table class="form-table text-center">
+                    <tr><td align="right">Select Type of Tax <span style="color: Red">*</span></td>
+                        <td align="left">
+                            <select id="ddl_acts" class="form-input" style="width: 150px;" required>
+                                <option value="">Select</option><option value="VAT">VAT</option><option value="CST">CST</option><option value="TOT">TOT</option><option value="APGST">APGST</option><option value="Entertainment Tax">Entertainment Tax</option><option value="Profession Tax">Profession Tax</option><option value="Luxury Tax">Luxury Tax</option><option value="Entry Tax - Vehicles">Entry Tax - Vehicles</option><option value="Entry Tax - Goods">Entry Tax - Goods</option><option value="HRBT">HRBT</option><option value="RDCESS">RDCESS</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr id="alertRow" style="display: none;"><td colspan="2" align="center" style="padding: 15px;"><span style="color: red; font-size: 16px; font-weight: bold; text-transform: uppercase;">YOU ARE PAYING TAX UNDER <span id="selectedTaxText" style="color: blue;"></span> ACT</span></td></tr>
+                    <tr><td align="right">TIN/GRN <span style="color: Red">*</span></td><td align="left"><input type="text" id="txt_tin" class="form-input" maxlength="20" required></td></tr>
+                    <tr><td align="right">Name of the Firm</td><td align="left"><span id="lbl_firm"></span></td></tr>
+                    <tr id="row_ptRegType" style="display: none;"><td align="right">PT Registration Type</td><td align="left"><span id="lbl_regType">Enrolment & Registration</span></td></tr>
+                    <tr><td align="right">Select Purpose <span style="color: Red">*</span></td><td align="left"><select id="ddl_purpose" class="form-input" style="width: 300px;" required><option value="">Select</option><option>Tax Payment</option><option>Penalty</option><option>Interest</option></select></td></tr>
+                    <tr id="row_paymentType" style="display: none;"><td align="right">Payment Type <span style="color: Red">*</span></td><td align="left"><select id="ddl_paymentType" class="form-input" style="width: 120px;" required><option value="">Select</option><option>Monthly</option><option>Yearly</option></select></td></tr>
+                    <tr><td align="right">Tax Period From - To <span style="color: Red">*</span></td><td align="left"><input type="text" id="txt_periodFrom" class="form-input date-input" placeholder="DD-MM-YYYY" required> - <input type="text" id="txt_periodTo" class="form-input date-input" placeholder="DD-MM-YYYY" required><br><span style="font-size:11px; color: #555;">(DD-MM-yyyy)</span></td></tr>
+                    <tr><td align="right">Enter Amount (in Rupees) <span style="color: Red">*</span></td><td align="left"><input type="number" id="txt_amount" class="form-input" style="width: 120px;" required></td></tr>
+                    <tr><td align="right">Remarks/Comments</td><td align="left"><input type="text" id="txtRemarks" class="form-input" style="width: 300px;"></td></tr>
+                    <tr><td align="right">Date <span style="color: Red">*</span></td><td align="left"><input type="text" id="txt_insDate" class="form-input date-input" required>&nbsp;<span id="date_format_guide" style="font-size:11px; color: #555;">(DD-MM-yyyy)</span></td></tr>
+                </table>
+                <div style="text-align: center; padding-top: 15px;"><button type="submit" class="btn-classic">Submit</button><button type="reset" id="btn_reset" class="btn-classic">Reset</button></div>
+                <div class="info-box-container">
+                    <div class="info-box-top"><strong>Challans shall be generated once bank scrolls are validated through cyber treasuries(Usually within 2-3days)</strong></div>
+                    <div class="info-box-bottom"><strong>e-Payment</strong> is enabled with Andhra Bank, Axis Bank, Bank Of Baroda, Bank of India, City Union Bank (CUB), Corporation Bank, HDFC Bank, ICICI Bank, Indian Overseas Bank, Kotak Mahindra Bank, SBI, Union Bank of India, Punjab national bank, Vijaya Bank, IDBI Bank, Dena Bank, Oriental Bank of Commerce, Indian Bank</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const RAZORPAY_KEY = "YOUR_RAZORPAY_KEY_ID"; 
+
+        function showCustomAlert() { document.getElementById('customAlert').style.display = 'flex'; }
+        function closeCustomAlert() { document.getElementById('customAlert').style.display = 'none'; }
+
+        document.getElementById('ddl_acts').addEventListener('change', function() {
+            const alertRow = document.getElementById('alertRow');
+            if (this.value) { document.getElementById('selectedTaxText').innerText = this.value.toUpperCase(); alertRow.style.display = 'table-row'; } 
+            else { alertRow.style.display = 'none'; }
+        });
+
+        document.getElementById('txt_tin').addEventListener('blur', function() {
+            const firmLabel = document.getElementById('lbl_firm');
+            const ptRegRow = document.getElementById('row_ptRegType');
+            if (this.value === "36434190187") { firmLabel.innerText = "AG ENTERPRISES"; ptRegRow.style.display = 'table-row'; } 
+            else { firmLabel.innerText = ""; ptRegRow.style.display = 'none'; if(this.value) showCustomAlert(); }
+        });
+
+        document.getElementById('ddl_purpose').addEventListener('change', function() {
+            const row = document.getElementById('row_paymentType');
+            if(this.value !== "") { row.style.display = 'table-row'; } else { row.style.display = 'none'; }
+        });
+
+        const dateConfig = { dateFormat: "d-m-Y", allowInput: true, disableMobile: "true" };
+        const toDateInput = flatpickr("#txt_periodTo", dateConfig);
+        flatpickr("#txt_periodFrom", { ...dateConfig, onChange: (d, s) => toDateInput.set('minDate', s) });
+        flatpickr("#txt_insDate", dateConfig);
+
+        document.getElementById('btn_reset').addEventListener('click', () => {
+            document.getElementById('alertRow').style.display = 'none';
+            document.getElementById('row_ptRegType').style.display = 'none';
+            document.getElementById('row_paymentType').style.display = 'none';
+            document.getElementById('lbl_firm').innerText = '';
+        });
+
+        document.getElementById('paymentForm').onsubmit = function(e) {
+            e.preventDefault();
+            const amount = document.getElementById('txt_amount').value;
+            const firmName = document.getElementById('lbl_firm').innerText;
+            if (!amount || amount <= 0) { alert('Please enter amount'); return; }
+            if (!firmName) { showCustomAlert(); return; }
+
+            const options = {
+                "key": RAZORPAY_KEY,
+                "amount": amount * 100, 
+                "currency": "INR",
+                "name": "Telangana Commercial Taxes",
+                "description": "Tax Payment for " + firmName,
+                "handler": function (response){
+                    alert("Payment Successful! ID: " + response.razorpay_payment_id);
+                    generatePDFReceipt(document.getElementById('txt_tin').value, document.getElementById('ddl_acts').value, amount, firmName, response.razorpay_payment_id);
+                },
+                "prefill": { "name": firmName },
+                "theme": { "color": "#008B8B" }
+            };
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+        };
+
+        function generatePDFReceipt(tin, taxType, amount, firmName, txnId) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const payDate = document.getElementById('txt_insDate').value;
+            doc.setFontSize(18); doc.setTextColor(0, 64, 135); doc.text("COMMERCIAL TAXES DEPARTMENT", 105, 20, null, null, "center");
+            doc.setFontSize(12); doc.setTextColor(0, 0, 0); doc.text("Government of Telangana", 105, 28, null, null, "center");
+            doc.setFontSize(14); doc.text("e-Payment Receipt", 105, 40, null, null, "center");
+            doc.setFontSize(11); doc.text(`Transaction ID: ${txnId}`, 20, 60); doc.text(`Payment Date: ${payDate}`, 130, 60);
+            doc.line(20, 65, 190, 65);
+            doc.text(`TIN / GRN: ${tin}`, 20, 75); doc.text(`Firm Name: ${firmName}`, 20, 85); doc.text(`Tax Type: ${taxType}`, 20, 95);
+            doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text(`Total Amount Paid: Rs. ${amount}/-`, 20, 110);
+            doc.save(`Receipt_${tin}.pdf`);
+        }
+    </script>
+</body>
+</html>
