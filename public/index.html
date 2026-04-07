@@ -174,10 +174,43 @@
             renderManualContent();
         }
 
-        document.getElementById('payBtn').onclick = function(e){
-            alert("Razorpay Key Setup Required.");
+        document.getElementById('payBtn').onclick = function(e) {
+            e.preventDefault(); 
+
+            var name = document.getElementById('custName').value;
+            var email = document.getElementById('custEmail').value;
+            var phone = document.getElementById('custPhone').value;
+
+            if(!name || !email || !phone) {
+                alert("Please fill all details (Name, Email, Phone) before paying.");
+                return;
+            }
+
+            var options = {
+                "key": "rzp_live_SaacUVUousxQwc", 
+                "amount": "499900", 
+                "currency": "INR",
+                "name": "The Global Corporate Technologies",
+                "description": "Lifetime Access - ERP Software",
+                "image": "TGCT.png", 
+                "prefill": {
+                    "name": name,
+                    "email": email,
+                    "contact": phone
+                },
+                "theme": {
+                    "color": "#2563EB"
+                },
+                "handler": function (response) {
+                    alert("Payment Successful! 🎉\nPayment ID: " + response.razorpay_payment_id);
+                }
+            };
+
+            var rzp1 = new Razorpay(options);
+            
+            rzp1.on('payment.failed', function (response){
+                    alert("Payment Failed! \nReason: " + response.error.description);
+            });
+
+            rzp1.open();
         }
-        renderManualContent();
-    </script>
-</body>
-</html>
